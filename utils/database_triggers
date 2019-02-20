@@ -1,5 +1,18 @@
-CREATE TRIGGER `update_basket`AFTER UPDATE ON `Basket`
-FOR EACH ROW
-  begin
+# Updates time of modifying basket
+CREATE TRIGGER `update_basket`
+  AFTER UPDATE
+  ON `Basket_Product`
+  FOR EACH ROW
+begin
+  UPDATE Basket SET last_modified = CURRENT_TIMESTAMP WHERE Basket.id = basket_id;
+end;
 
-  end;
+
+#-----Доработка
+CREATE TRIGGER `fill_name_of_product__Order_Product`
+  AFTER INSERT 
+  ON `Order_Product`
+  FOR EACH ROW
+  begin 
+  UPDATE Order_Product SET product_name = Product.name WHERE Product.id = product_id;
+end;

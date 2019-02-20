@@ -16,6 +16,7 @@ CREATE TABLE Customer
   UNIQUE KEY customer_email (email)
 );
 
+
 CREATE TABLE Category
 (
   id    INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -34,24 +35,27 @@ CREATE TABLE Product
   name        VARCHAR(127) NOT NULL,
   description TEXT         NOT NULL,
   price       DECIMAL      NOT NULL,
-  category_id INT UNSIGNED NOT NULL DEFAULT 0,
+  category_id INT UNSIGNED NULL DEFAULT NULL,
 
   PRIMARY KEY (id),
 
   CONSTRAINT product__category_fk
     FOREIGN KEY (category_id) REFERENCES Category (id)
+      on delete set null
 );
 
 
 CREATE TABLE Basket
 (
-  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  customer_id INT UNSIGNED NOT NULL,
+  id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  customer_id   INT UNSIGNED NOT NULL,
+  last_modified TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (id),
 
   CONSTRAINT basket__customer_fk
     FOREIGN KEY (customer_id) REFERENCES Customer (id)
+      on delete cascade
 );
 
 
@@ -65,10 +69,12 @@ CREATE TABLE Basket_Product
   UNIQUE KEY uniq_basket_prod (basket_id, product_id),
 
   CONSTRAINT basket_product__basket_fk
-    FOREIGN KEY (basket_id) REFERENCES Basket (id),
+    FOREIGN KEY (basket_id) REFERENCES Basket (id)
+      on delete cascade,
 
   CONSTRAINT basket_product__product_fk
     FOREIGN KEY (product_id) REFERENCES Product (id)
+      on delete cascade
 );
 
 
@@ -85,6 +91,7 @@ CREATE TABLE Product_Special
 
   CONSTRAINT product_special__product_fk
     FOREIGN KEY (product_id) REFERENCES Product (id)
+      on delete cascade
 );
 
 
@@ -97,6 +104,7 @@ CREATE TABLE Product_Image
 
   CONSTRAINT product_image__product_fk
     FOREIGN KEY (product_id) REFERENCES Product (id)
+      on delete cascade
 );
 
 
@@ -104,7 +112,7 @@ CREATE TABLE Product_Image
 CREATE TABLE Review
 (
   id           INT UNSIGNED                        NOT NULL AUTO_INCREMENT,
-  customer_id  INT UNSIGNED                        NOT NULL,
+  customer_id  INT UNSIGNED                        NULL,
   product_id   INT UNSIGNED                        NOT NULL,
   date_created TIMESTAMP                           NOT NULL DEFAULT CURRENT_TIMESTAMP,
   text         TEXT                                NOT NULL,
@@ -115,22 +123,29 @@ CREATE TABLE Review
   UNIQUE KEY customer_review_product (customer_id, product_id),
 
   CONSTRAINT review__customer_fk
-    FOREIGN KEY (customer_id) REFERENCES Customer (id),
+    FOREIGN KEY (customer_id) REFERENCES Customer (id)
+      on DELETE set null,
 
   CONSTRAINT review__product_fk
     FOREIGN KEY (product_id) REFERENCES Product (id)
+      on DELETE cascade
 );
 
 
 
 CREATE TABLE Shipping
 (
-  id      INT UNSIGNED                      NOT NULL AUTO_INCREMENT,
-  address VARCHAR(255)                      NOT NULL,
-  type    ENUM ('courier', 'mail', 'extra') NOT NULL,
-  cost    DECIMAL                           NOT NULL,
+  id       INT UNSIGNED                      NOT NULL AUTO_INCREMENT,
+  order_id INT UNSIGNED                      NOT NULL,
+  address  VARCHAR(255)                      NOT NULL,
+  type     ENUM ('courier', 'mail', 'extra') NOT NULL,
+  cost     DECIMAL                           NOT NULL,
 
-  PRIMARY KEY (id)
+  PRIMARY KEY (id),
+
+  CONSTRAINT shipping__order_fk
+    FOREIGN KEY (order_id) REFERENCES `Order` (id)
+      on DELETE cascade
 );
 
 
@@ -138,7 +153,6 @@ CREATE TABLE `Order`
 (
   id           INT UNSIGNED                                            NOT NULL AUTO_INCREMENT,
   customer_id  INT UNSIGNED                                            NOT NULL,
-  shipping_id  INT UNSIGNED                                            NOT NULL,
   date_created TIMESTAMP                                               NOT NULL DEFAULT CURRENT_TIMESTAMP,
   order_status ENUM ('new', 'hold', 'shipping', 'delivered', 'closed') NOT NULL DEFAULT 'new',
   phone_number VARCHAR(15)                                             NOT NULL,
@@ -146,25 +160,26 @@ CREATE TABLE `Order`
   PRIMARY KEY (id),
 
   CONSTRAINT order__customer_fk
-    FOREIGN KEY (customer_id) REFERENCES Customer (id),
-
-  CONSTRAINT order__shipping_fk
-    FOREIGN KEY (shipping_id) REFERENCES Shipping (id)
+    FOREIGN KEY (customer_id) REFERENCES Customer (id)
+      on delete cascade
 );
 
 
 
 CREATE TABLE Order_Product
 (
-  quantity   SMALLINT UNSIGNED NOT NULL,
-  order_id   INT UNSIGNED      NOT NULL,
-  product_id INT UNSIGNED      NOT NULL,
+  quantity     SMALLINT UNSIGNED NOT NULL,
+  product_name VARCHAR(127)      NOT NULL,
+  order_id     INT UNSIGNED      NOT NULL,
+  product_id   INT UNSIGNED      NULL,
 
   CONSTRAINT order_product__order_fk
-    FOREIGN KEY (order_id) REFERENCES `Order` (id),
+    FOREIGN KEY (order_id) REFERENCES `Order` (id)
+      on delete cascade,
 
   CONSTRAINT order_product__product_fk
     FOREIGN KEY (product_id) REFERENCES Product (id)
+      on delete set null
 );
 
 
@@ -186,8 +201,10 @@ CREATE TABLE Product_Stock
   UNIQUE KEY uniq_stock_prod (stock_id, product_id),
 
   CONSTRAINT product_stock__stock_fk
-    FOREIGN KEY (stock_id) REFERENCES Stock (id),
+    FOREIGN KEY (stock_id) REFERENCES Stock (id)
+      on update cascade on delete cascade,
 
   CONSTRAINT product_stock__product_fk
     FOREIGN KEY (product_id) REFERENCES Product (id)
+      on update cascade on delete cascade
 );
