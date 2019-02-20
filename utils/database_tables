@@ -1,0 +1,193 @@
+SHOW DATABASES;
+
+USE `2AzrDBX2Y3`;
+
+
+CREATE TABLE Customer
+(
+  id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  first_name VARCHAR(31)  NOT NULL,
+  last_name  VARCHAR(31)  NOT NULL,
+  email      VARCHAR(127) NOT NULL,
+  password   CHAR(20)     NOT NULL,
+
+  PRIMARY KEY (id),
+
+  UNIQUE KEY customer_email (email)
+);
+
+CREATE TABLE Category
+(
+  id    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name  VARCHAR(31)  NOT NULL,
+  image LONGBLOB     NULL DEFAULT NULL,
+
+  PRIMARY KEY (id),
+
+  UNIQUE KEY category_name (name)
+);
+
+
+CREATE TABLE Product
+(
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name        VARCHAR(127) NOT NULL,
+  description TEXT         NOT NULL,
+  price       DECIMAL      NOT NULL,
+  category_id INT UNSIGNED NOT NULL DEFAULT 0,
+
+  PRIMARY KEY (id),
+
+  CONSTRAINT product__category_fk
+    FOREIGN KEY (category_id) REFERENCES Category (id)
+);
+
+
+CREATE TABLE Basket
+(
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  customer_id INT UNSIGNED NOT NULL,
+
+  PRIMARY KEY (id),
+
+  CONSTRAINT basket__customer_fk
+    FOREIGN KEY (customer_id) REFERENCES Customer (id)
+);
+
+
+
+CREATE TABLE Basket_Product
+(
+  quantity   SMALLINT UNSIGNED NOT NULL,
+  basket_id  INT UNSIGNED      NOT NULL,
+  product_id INT UNSIGNED      NOT NULL,
+
+  UNIQUE KEY uniq_basket_prod (basket_id, product_id),
+
+  CONSTRAINT basket_product__basket_fk
+    FOREIGN KEY (basket_id) REFERENCES Basket (id),
+
+  CONSTRAINT basket_product__product_fk
+    FOREIGN KEY (product_id) REFERENCES Product (id)
+);
+
+
+
+CREATE TABLE Product_Special
+(
+  promo_code    INT UNSIGNED NOT NULL,
+  product_id    INT UNSIGNED NOT NULL,
+  start_date    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  end_date      TIMESTAMP    NULL,
+  special_price DECIMAL      NOT NULL,
+
+  PRIMARY KEY (promo_code),
+
+  CONSTRAINT product_special__product_fk
+    FOREIGN KEY (product_id) REFERENCES Product (id)
+);
+
+
+
+CREATE TABLE Product_Image
+(
+  product_id       INT UNSIGNED     NOT NULL,
+  image            LONGBLOB         NULL     DEFAULT NULL,
+  image_sort_order TINYINT UNSIGNED NOT NULL DEFAULT 0,
+
+  CONSTRAINT product_image__product_fk
+    FOREIGN KEY (product_id) REFERENCES Product (id)
+);
+
+
+
+CREATE TABLE Review
+(
+  id           INT UNSIGNED                        NOT NULL AUTO_INCREMENT,
+  customer_id  INT UNSIGNED                        NOT NULL,
+  product_id   INT UNSIGNED                        NOT NULL,
+  date_created TIMESTAMP                           NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  text         TEXT                                NOT NULL,
+  rating       ENUM ('1', '2', '3', '4', '5', '-') NOT NULL DEFAULT '-',
+
+  PRIMARY KEY (id),
+
+  UNIQUE KEY customer_review_product (customer_id, product_id),
+
+  CONSTRAINT review__customer_fk
+    FOREIGN KEY (customer_id) REFERENCES Customer (id),
+
+  CONSTRAINT review__product_fk
+    FOREIGN KEY (product_id) REFERENCES Product (id)
+);
+
+
+
+CREATE TABLE Shipping
+(
+  id      INT UNSIGNED                      NOT NULL AUTO_INCREMENT,
+  address VARCHAR(255)                      NOT NULL,
+  type    ENUM ('courier', 'mail', 'extra') NOT NULL,
+  cost    DECIMAL                           NOT NULL,
+
+  PRIMARY KEY (id)
+);
+
+
+CREATE TABLE `Order`
+(
+  id           INT UNSIGNED                                            NOT NULL AUTO_INCREMENT,
+  customer_id  INT UNSIGNED                                            NOT NULL,
+  shipping_id  INT UNSIGNED                                            NOT NULL,
+  date_created TIMESTAMP                                               NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  order_status ENUM ('new', 'hold', 'shipping', 'delivered', 'closed') NOT NULL DEFAULT 'new',
+  phone_number VARCHAR(15)                                             NOT NULL,
+
+  PRIMARY KEY (id),
+
+  CONSTRAINT order__customer_fk
+    FOREIGN KEY (customer_id) REFERENCES Customer (id),
+
+  CONSTRAINT order__shipping_fk
+    FOREIGN KEY (shipping_id) REFERENCES Shipping (id)
+);
+
+
+
+CREATE TABLE Order_Product
+(
+  quantity   SMALLINT UNSIGNED NOT NULL,
+  order_id   INT UNSIGNED      NOT NULL,
+  product_id INT UNSIGNED      NOT NULL,
+
+  CONSTRAINT order_product__order_fk
+    FOREIGN KEY (order_id) REFERENCES `Order` (id),
+
+  CONSTRAINT order_product__product_fk
+    FOREIGN KEY (product_id) REFERENCES Product (id)
+);
+
+
+CREATE TABLE Stock
+(
+  id            TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  stock_address VARCHAR(255)     NOT NULL,
+
+  PRIMARY KEY (id)
+);
+
+
+CREATE TABLE Product_Stock
+(
+  quantity   SMALLINT UNSIGNED NOT NULL,
+  stock_id   TINYINT UNSIGNED  NOT NULL,
+  product_id INT UNSIGNED      NOT NULL,
+
+  UNIQUE KEY uniq_stock_prod (stock_id, product_id),
+
+  CONSTRAINT product_stock__stock_fk
+    FOREIGN KEY (stock_id) REFERENCES Stock (id),
+
+  CONSTRAINT product_stock__product_fk
+    FOREIGN KEY (product_id) REFERENCES Product (id)
+);
