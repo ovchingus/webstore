@@ -1,6 +1,6 @@
 SHOW DATABASES;
 
-USE `2AzrDBX2Y3`;
+USE `webstore_db`;
 
 
 CREATE TABLE Customer
@@ -66,8 +66,6 @@ CREATE TABLE Basket_Product
   basket_id  INT UNSIGNED      NOT NULL,
   product_id INT UNSIGNED      NOT NULL,
 
-  UNIQUE KEY uniq_basket_prod (basket_id, product_id),
-
   CONSTRAINT basket_product__basket_fk
     FOREIGN KEY (basket_id) REFERENCES Basket (id)
       on delete cascade,
@@ -120,7 +118,7 @@ CREATE TABLE Review
 
   PRIMARY KEY (id),
 
-  UNIQUE KEY customer_review_product (customer_id, product_id),
+  UNIQUE customer_review_product (`customer_id`, `product_id`),
 
   CONSTRAINT review__customer_fk
     FOREIGN KEY (customer_id) REFERENCES Customer (id)
@@ -128,23 +126,6 @@ CREATE TABLE Review
 
   CONSTRAINT review__product_fk
     FOREIGN KEY (product_id) REFERENCES Product (id)
-      on DELETE cascade
-);
-
-
-
-CREATE TABLE Shipping
-(
-  id       INT UNSIGNED                      NOT NULL AUTO_INCREMENT,
-  order_id INT UNSIGNED                      NOT NULL,
-  address  VARCHAR(255)                      NOT NULL,
-  type     ENUM ('courier', 'mail', 'extra') NOT NULL,
-  cost     DECIMAL                           NOT NULL,
-
-  PRIMARY KEY (id),
-
-  CONSTRAINT shipping__order_fk
-    FOREIGN KEY (order_id) REFERENCES `Order` (id)
       on DELETE cascade
 );
 
@@ -162,6 +143,22 @@ CREATE TABLE `Order`
   CONSTRAINT order__customer_fk
     FOREIGN KEY (customer_id) REFERENCES Customer (id)
       on delete cascade
+);
+
+
+CREATE TABLE Shipping
+(
+  id       INT UNSIGNED                      NOT NULL AUTO_INCREMENT,
+  order_id INT UNSIGNED                      NOT NULL,
+  address  VARCHAR(255)                      NOT NULL,
+  type     ENUM ('courier', 'mail', 'extra') NOT NULL,
+  cost     DECIMAL                           NOT NULL,
+
+  PRIMARY KEY (id),
+
+  CONSTRAINT shipping__order_fk
+    FOREIGN KEY (order_id) REFERENCES `Order` (id)
+      on DELETE cascade
 );
 
 
@@ -198,7 +195,6 @@ CREATE TABLE Product_Stock
   stock_id   TINYINT UNSIGNED  NOT NULL,
   product_id INT UNSIGNED      NOT NULL,
 
-  UNIQUE KEY uniq_stock_prod (stock_id, product_id),
 
   CONSTRAINT product_stock__stock_fk
     FOREIGN KEY (stock_id) REFERENCES Stock (id)

@@ -1,18 +1,34 @@
-# Updates time of modifying basket
-CREATE TRIGGER `update_basket`
+###################################################################
+# 1) Updates last_modified_time when updates or inserts to basket #
+###################################################################
+CREATE TRIGGER `update_basket_after_update`
   AFTER UPDATE
   ON `Basket_Product`
   FOR EACH ROW
 begin
   UPDATE Basket SET last_modified = CURRENT_TIMESTAMP WHERE Basket.id = basket_id;
 end;
+###################################################################
+CREATE TRIGGER `update_basket_after_insert`
+  AFTER INSERT
+  ON `Basket_Product`
+  FOR EACH ROW
+begin
+  UPDATE Basket SET last_modified = CURRENT_TIMESTAMP WHERE Basket.id = basket_id;
+end;
+###################################################################
+
 
 
 #-----Доработка
 CREATE TRIGGER `fill_name_of_product__Order_Product`
-  AFTER INSERT 
+  AFTER INSERT
   ON `Order_Product`
   FOR EACH ROW
-  begin 
-  UPDATE Order_Product SET product_name = Product.name WHERE Product.id = product_id;
+begin
+  UPDATE Order_Product
+  SET product_name = webstore_db.Product.name
+  WHERE webstore_db.Product.id = product_id;
+
+  #SET NEW.product_name = (SELECT name FROM Product WHERE Product.id = product_id );
 end;
